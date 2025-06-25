@@ -1,0 +1,428 @@
+Project 1: Descriptive Analysis
+Project Title:
+Advanced Implementation and Secure Data Management of Public Tree in City of Vancouver Analytics Platform on AWS
+Project Description:
+This project focused on designing, developing, and securing a cloud-based Data Analytics Platform (DAP) leveraging AWS services to analyze Vancouver’s Public Tree dataset. The primary objective was to create a robust, scalable, and governed data pipeline that facilitates the ingestion, cleaning, cataloging, and analysis of urban forestry data. A key business question guiding the analysis was to determine which neighborhoods in Vancouver had the largest average diameter of Taxus baccata trees. The platform was designed to ensure data integrity, security, and cost efficiency while producing actionable insights that can support city planning and environmental management.
+Objective:
+•	Build an end-to-end, secure analytics platform on AWS for managing and analyzing municipal tree data and to segregate Baccata trees in terms of average diameter.
+•	Perform descriptive statistical analysis to identify spatial maturity trends of Taxus baccata across neighborhoods.
+•	Implement comprehensive data governance, monitoring, and cost-control mechanisms within AWS.
+•	Gain hands-on expertise with AWS cloud architecture, data pipeline automation, and security best practices.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.19%20Data%20Analytic%20Platform.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.1%20Graph%20of%20Bacatta%20Tree%20Diameter%20Analysis.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.2%20Data%20Analytics%20Platform%20of%20Public%20Trees%20in%20City%20of%20Vancouver.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.3%20Fish-bone%20Diagram.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.4%20Data%20Flow%20of%20Public%20Trees%20in%20City%20of%20Vancouver.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.5%20Data%20Lineage%20Analysis.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.6%20Data%20Lake%20Analysis.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.7%20Data%20Lake%20Design.png
+Dataset:
+The dataset was sourced from the City of Vancouver Open Data Portal. It contains detailed records of public street trees with fields such as:
+•	TREE_ID: Unique identifier for each tree.
+•	COMMON_NAME / SPECIES_NAME / GENUS_NAME: Taxonomy details.
+•	NEIGHBOURHOOD_NAME: Location indicator at neighborhood level.
+•	DIAMETER: Diameter of the tree, an indicator of size and age.
+•	DATE_PLANTED: Date of planting.
+•	Geom / geo_point_2d: Geographic coordinates.
+•	Other attributes: Including maintenance and condition information.
+This dataset required extensive cleaning and structuring before analytical use, particularly filtering for the species Taxus baccata.
+Methodology:
+1. Data Collection and Cloud Infrastructure Setup:
+•	VPC Creation:
+Created a Virtual Private Cloud named VancouverTreeAnalytics-VPC-Amrisha in the AWS console to isolate network resources securely.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.8%20Creation%20of%20VPC.png
+•	Security Groups:
+Configured security group VancouverTreeAnalytics-SG-Amrisha with inbound rules permitting ‘All Traffic’ to allow flexible resource communication during development.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.9%20Inbound%20rule%20configuration%20of%20VPC.png
+•	EC2 Instance and Storage Setup:
+Launched an EC2 instance named VTAGVS-Amrisha using a Windows OS, selecting a low-cost T3.micro instance type for lightweight data handling. Configured SSH key pairs (vockey) to securely connect to the instance. Attached an Elastic Block Store (EBS) volume named VancouverTreeAnalytics-Volume-Amrisha to simulate persistent storage.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.10%20EC2%20instance.png
+•	Network Configuration:
+Assigned a Network Interface Controller (NIC) named VancouverTreeAnalytics-NIC-Amrisha for network traffic management.
+•	Data Upload to S3:
+Created an S3 bucket vancouvertreeanalytics-raw-amrisha to store raw datasets. Established a logical folder hierarchy representing year, quarter, month, week, day, and server to organize incoming data systematically. Uploaded PublicTrees.csv into the respective folder.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.11%20Folder%20Structure%20and%20Data%20Upload%20in%20S3%20bucket.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.12%20Creation%20of%20S3%20Clean%20(Cln)%20bucket.png
+2. Data Profiling and Preliminary Exploration:
+•	S3 Clean Bucket Setup:
+Created a clean data bucket vancouvertreeanalytics-cln-amrisha with subfolders System (for programmatic access) and User (for business-friendly access).
+•	AWS Glue DataBrew Project:
+Initiated Vancouvertreeanalytics-Publictrees-Prj-Amrisha to profile raw data and gain insights about completeness, uniqueness, and data distribution.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.13%20Data%20Profiling%20project.png
+•	Profiling Job:
+Configured and executed Vancouvertreeanalytics-Publictrees-Profiling-Job-Amrisha targeting the S3 raw data source. Analyzed null values, duplicate counts, and data freshness metrics to identify areas requiring cleaning.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.14%20Data%20Profiling%20Job.png
+3. Data Cleaning and Transformation:
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.15%20Dataset%20Cleaning.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.16%20Dataset%20Cleaning%20Summary.png
+•	Data Filtering:
+Removed rows with null NEIGHBOURHOOD_NAME values to maintain meaningful geographic categorization.
+•	Column Pruning:
+Dropped redundant geo_point_2d column since it duplicated spatial information already present in Geom.
+•	Column Renaming:
+Renamed Geom column to Geometric_coordinates for improved clarity and consistency.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.17%20Changes%20made%20during%20dataset%20cleaning.png
+•	Glue Cleaning Job:
+Created the cleaning job Vancouvertreeanalytics-Publictrees-Cleaning-Job-Amrisha with dual outputs:
+o	User-friendly CSV stored in User folder, uncompressed and consolidated into a single file for easy consumption by non-technical stakeholders.
+o	System-optimized Parquet stored in System folder, compressed with Snappy and partitioned by NEIGHBOURHOOD_NAME for efficient query performance.
+•	Overwrite Logic:
+Configured jobs to replace older outputs to minimize storage costs.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.18%20Cleaned%20dataset%20output%20storage.png
+4. Data Cataloging and ETL Pipeline Development:
+•	Glue Data Catalog Setup:
+Created database vancouvertreeanalytics-data-catalog-amrisha to register and manage metadata.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.20%20Database%20to%20manage%20metadata.png
+•	Crawler Configuration:
+Created and ran vancouvertreeanalytics-crawler-amrisha to scan the cleaned System folder, extract schemas, and populate the Data Catalog with structured tables.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.21%20Creation%20of%20crawler.png
+•	Visual ETL Job:
+Developed an ETL pipeline vancouvertreeanalytics-amrisha with:
+o	Extraction Node: Source from Data Catalog.
+o	SQL Transformation: Applied direct SQL querying on the single table.
+o	Loading Nodes:
+	CSV format to User folder (no compression for readability).
+	Parquet format with Snappy compression to System folder, updating partitions in the Data Catalog to maintain metadata integrity.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.22%20Visual%20ETL.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.23%20Output%20in%20System%20and%20User%20Folders.png
+5. Data Summarization Using Amazon Athena:
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.24%20Data%20Summarization.png
+•	Executed the following SQL query to calculate neighborhood-level statistics for Taxus baccata:
+SELECT
+  NEIGHBOURHOOD_NAME,
+  COMMON_NAME,
+  MAX(DIAMETER) AS max_diameter,
+  MIN(DIAMETER) AS min_diameter,
+  AVG(DIAMETER) AS avg_diameter
+FROM
+  public_trees
+WHERE
+  SPECIES_NAME = 'BACCATA'
+GROUP BY
+  NEIGHBOURHOOD_NAME,
+  COMMON_NAME
+ORDER BY
+  avg_diameter DESC;
+•	Result columns included neighborhood, species common name, and max, min, and average tree diameters.
+•	Enabled data-driven insight into urban forestry status by revealing spatial variations in tree maturity.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.25%20Query%20run%20on%20Amazon%20Athena.png
+6. Data Security Implementation:
+•	AWS KMS Key Management:
+o	Created a symmetric encryption key vta-pt-key-amr with LabRole assigned as administrator and user.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.27%20Creation%20of%20Key.png
+o	Configured all S3 buckets (raw, clean, curated) to use this customer-managed key (CMK) for encryption and decryption, enhancing data confidentiality.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.28%20Data%20encryption%20for%20raw%20bucket.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.31%20Data%20encryption%20for%20cln%20bucket.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.34%20Data%20encryption%20for%20cur%20bucket.png
+•	Bucket Versioning:
+o	Enabled versioning on all buckets to maintain historical versions of files and enable recovery from accidental deletions or corruption.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.29%20Bucket%20versioning%20of%20raw%20bucket.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.32%20Bucket%20versioning%20of%20cln%20bucket.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.35%20Bucket%20versioning%20of%20cur%20bucket.png
+•	Cross-Region Replication:
+o	Established replication rules (vta-pt-rep-rul-amr) to replicate raw, clean, and curated buckets into backup buckets suffixed -bac-amrisha.
+o	Applied KMS encryption to replicated data, ensuring end-to-end data security and availability.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.30%20Replication%20of%20raw%20bucket%20contents.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.33%20Replication%20of%20cln%20bucket%20contents.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.36%20Replication%20of%20cur%20bucket%20contents.png
+7. Data Governance and Quality Control:
+•	Quality Check Pipeline:
+o	Created a new S3 bucket vancouvertreeanalytics-trf-amrisha with folders for quality check results: Passed and Failed.
+•	Glue Visual ETL Quality Job:
+o	Job named vta-pt-QC-Amr.
+o	Loaded raw dataset from S3.
+o	Applied data quality rules:
+	Completeness: ≥95% non-null for species_name.
+	Uniqueness: >99% unique for tree_id.
+	Data Freshness: Latest record older than 30 days for date_planted.
+•	Conditional Routing:
+o	Separated data into “Passed” and “Failed” groups based on rule outcomes.
+o	Cleaned metadata columns before saving results.
+o	Stored outputs in CSV format, uncompressed for ease of review by stakeholders.
+•	Outcome:
+Enabled transparent data quality tracking to ensure only reliable data is promoted for analysis.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.37%20Visual%20ETL%20for%20Quality%20check.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.38%20Quality%20check%20output%20in%20Passed%20folder.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.39%20Quality%20check%20output%20in%20Failed%20folder.png
+8. Data Monitoring and Alerting:
+•	CloudWatch Dashboard:
+o	Created dashboard vta-pt-MCR-amr displaying:
+	S3 bucket size trends over 3 months.
+	AWS Glue job resource usage.
+	Athena estimated service charges.
+•	CloudWatch Alarm:
+o	Alarm vta-pt-alm-amr configured on raw bucket size threshold (45,000 bytes).
+o	Triggered email notifications to amrisha.mahata@myucwest.ca upon breach.
+o	Alarm status displayed on the monitoring dashboard for real-time visibility.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.40%20Dashboard%20for%20resource%20usage%20metrics.png
+•	CloudTrail Audit Logging:
+o	Enabled trail vta-pt-tra-amr to log all AWS account activities.
+o	Logs stored in dedicated S3 bucket for audit and compliance purposes.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.41%20Trail%20for%20event%20tracking.png
+Insights and Findings:
+•	Neighborhoods with larger average diameters of Taxus baccata trees were identified, providing valuable information for urban forest management and planning.
+•	The data pipeline successfully transformed raw, unstructured municipal data into clean, cataloged, and queryable datasets.
+•	Implemented robust data governance, security, and monitoring frameworks ensuring data quality and operational cost control.
+•	The Single Source of Truth (SSOT) architecture enabled consistent and accurate analysis outputs.
+Recommendations:
+•	Extend platform to analyze other tree species or city datasets such as streetlights or traffic sensors.
+•	Develop dynamic dashboards (e.g., Amazon QuickSight) to share interactive analytics with stakeholders.
+•	Integrate real-time streaming data to capture and analyze tree health or environmental sensors.
+•	Incorporate advanced analytics or machine learning models for predictive insights on urban tree growth and health.
+Tools and Technologies:
+•	Cloud Infrastructure: AWS VPC, EC2, EBS, S3, KMS
+•	Data Processing: AWS Glue (DataBrew, Data Catalog, Visual ETL), Amazon Athena
+•	Security and Governance: AWS KMS, Bucket Versioning, Cross-Region Replication, CloudTrail
+•	Monitoring and Alerting: Amazon CloudWatch (Dashboard and Alarms)
+•	SQL: Data querying and summarization
+Deliverables:
+•	Fully implemented AWS-based analytics platform supporting data ingestion, cleaning, cataloging, and analysis.
+•	Curated, cleaned datasets partitioned for efficient querying.
+•	Data quality governance pipelines with clear pass/fail separation.
+•	Cost-efficient resource management with automated termination and replication.
+•	Detailed SQL analytical results answering core business questions.
+•	Monitoring dashboards and alerts ensuring operational oversight.
+Cost Estimation of service usage in AWS:
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/Project%203.26%20Cost%20estimate%20of%20using%20S3%20and%20Databrew%20services.png
+Conclusion:
+This project showcases a comprehensive cloud data analytics solution built with AWS native services, demonstrating proficiency in cloud infrastructure design, big data processing, security best practices, and governance. The pipeline provides a reliable, secure, and cost-effective framework to extract actionable insights from urban environmental datasets, empowering data-driven decisions in municipal forestry management. This experience greatly enhanced my skills in cloud data engineering, ETL automation, data security, and applied descriptive analytics.
+
+                             
+Project 2: Descriptive Analysis
+Project Description: 
+A hands-on project to design, implement, and optimize Finance Department of University Canada West - oriented Operations and Data Analytics Platform using AWS cloud services.
+Project Title: 
+Design and Implementation of an Operations and Data Analytics Platform on AWS for Finance Department of University Canada West
+Project Description:
+This project involves designing, deploying, and managing an end-to-end Operations and Data Analytics Platform using Amazon Web Services (AWS). The objective is to simulate a Finance Department environment, set up data ingestion, perform data cleaning and transformation, conduct cost estimation, and derive meaningful insights from the data through enrichment and summarization processes using AWS tools.
+Objective:
+To implement a scalable, secure, and efficient analytics platform in AWS that:
+•	Establishes a virtual operations environment.
+•	Enables data ingestion, storage, and cost estimation.
+•	Supports data profiling and cleaning.
+•	Performs data enrichment and summarization to generate business insights.
+Dataset Description:
+The datasets used for this project are organizational financial data, consisting of:
+•	Expense Claims Data (.CSV and .JSON formats): Contains detailed records of individual expense transactions submitted by departments.
+•	Departmental Budgets Data (.CSV and .JSON formats): Lists the predefined budget allocations for each department to guide and control spending.
+Each dataset includes the following variables:
+•	ClaimDate, Amount/DepartmentExpense, ExpenseCategory
+•	DepartmentID, AllocatedBudget, etc.
+Datasets are organized in raw, cleaned, and curated formats within Amazon S3 buckets using hierarchical folder structures.
+Methodology:
+1. Design and Initial Setup
+1.1 Analysis and Design
+o	Analyzed problem statements and business goals. 
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/1-Problem%20Statement%20and%20Business%20Goals.png
+o	Created a Fish-Bone diagram to explore root causes. 
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/2-Fish-Bone%20Diagram.png
+o	Designed a Data Lake structure, defining bucket tags, storage classes, and folder structures. 
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/3-DataLake%20Structure.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/4-%20DataLake%20Design.png
+1.2 Implementation of Operations Platform
+o	Configured VPC (Finance-Amr), Security Group (Finance-SG-Amr), EC2 instance (RGVS-Amr), and associated EBS Volume and Network Interface.
+o	Ensured instance security using Key Pair authentication.
+1.3 Data Analytics Platform Setup
+o	Created an S3 bucket: finance-raw-amr with folders ExpenseClaims and DepartmentalBudgets.
+o	Uploaded sample datasets and configured a Lifecycle Policy for quarterly transition to lower-cost storage tiers.
+2. Cost Estimation and Data Cleaning
+2.1 Storage Cost Estimation (Fig. 5)
+o	Used AWS S3 Storage Lens and AWS Pricing Calculator to estimate storage and ingestion costs for finance-raw-amr.
+o	Calculated size of data, request types, and derived monthly cost estimate.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/5-Data%20Ingestion%20Cost%20Evaluation.png
+2.2 Data Cleaning with AWS Glue DataBrew 
+o	Created cleaned S3 bucket finance-cln-amr with structured folders.
+o	Used AWS Glue DataBrew to clean the ExpenseClaims dataset:
+	Normalized and formatted ClaimDate
+	Renamed columns (e.g., Amount to DepartmentExpense)
+	Applied Z-score normalization
+o	Created Cleaning Job with optimized output storage options to minimize cost.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/6-Data%20Cleaning%20Design.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/8-Data%20Cleaning%20Implementation.png
+2.3 Validation 
+o	Verified cleaned files were stored in the appropriate S3 locations.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/7-Clean%20Data%20Result.png
+o	No cleaning required for DepartmentBudgets files.
+3. Enrichment and Insight Generation
+3.1	Cost Estimation for DataBrew Usage 
+Estimated AWS Glue DataBrew costs (~$3.53/month) using AWS Pricing Calculator.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/9-Cost%20Estimation%20for%20Databrew%20Usage.png
+Monitoring
+Created CloudWatch Alarm Charge-Alarm-Amrisha to alert for high usage costs.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/14-CloudWatch%20Alarm%20.png
+3.3 Data Preparation for Analysis
+3.3.1 Created finance-cur-amr S3 bucket for curated data.
+3.3.2 Used AWS Glue Crawler to catalog datasets into tables (finance-data-catalog-amr).
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/15-Data%20Catalog%20Creation%20using%20Crawler.png
+3.4	Data Enrichment
+3.4.1 Created Visual ETL Job finance-enriching-amr to join ExpenseClaims and DepartmentBudgets.
+3.4.2 Timestamp added; time formatted.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/10-ETL%20Design%20Buisness%20Question.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/11-ETL%20Design%20Data%20Enriching.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/16-ETL%20Pipeline%20depicting%20enriching%20activity.png
+3.5 Summarization and Querying
+      3.5.1 Used Amazon Athena to query enriched datasets.
+      https://github.com/amrisha-20/data-analyst-amrisha/blob/main/12-ETL%20Design%20Data%20Summarization.png
+3.5.2 Identified departments with expenses exceeding allocated budgets using SQL queries.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/17-Data%20summarization.png
+      3.5.3 Saved query results in curated folder structure.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/13-ETL%20Design%20Implementation.png
+Data Visualization (Planned/Future)
+While this phase focused on back-end implementation, future deliverables include:
+•	Bar charts: Expense by department
+•	Line graphs: Monthly trends
+•	Heatmaps: Data access frequency and usage cost
+•	Athena Dashboards: Summarized insights
+Key Insights and Findings
+•	Lifecycle policies and bucket structuring effectively reduce long-term storage costs.
+•	AWS Glue DataBrew enables low-code data profiling and transformation.
+•	Enriched data allows for direct identification of budget overspending by departments.
+•	Cost monitoring tools like CloudWatch and the Pricing Calculator are essential for budget-conscious operations.
+Recommendations
+•	Continue using Visual ETL to automate enrichment workflows.
+•	Implement role-based access controls for sensitive data buckets.
+•	Extend the use of Athena and QuickSight for business intelligence dashboards.
+•	Integrate the system with event-based triggers to automate data pipeline workflows.
+Tools and Technologies Used
+•	AWS Academy Learner Lab
+•	Amazon EC2, S3, VPC, EBS, CloudWatch
+•	AWS Glue (DataBrew, Crawler, ETL Jobs)
+•	AWS Athena
+•	AWS Pricing Calculator
+•	Z-score normalization, UNIXTIMEFORMAT
+Deliverables
+•	Detailed technical documentation of setup and procedures.
+•	Cleaned and enriched datasets in S3 buckets.
+•	SQL queries for financial performance summarization.
+•	AWS Pricing estimates and cost control setup.
+Conclusion
+This project has successfully laid the foundation for a data-driven finance analytics platform on AWS. Through structured setup, cost estimation, data preparation, and enrichment, the environment is now equipped to support deeper analysis and insight generation, crucial for strategic decision-making.
+
+  
+Project 3: Descriptive Analysis
+Project Title:
+Advanced Implementation and Secure Data Management of Finance Operations and Analytics Platform on AWS 
+Project Description:
+This project focused on advancing the configuration and operationalization of a cloud-based Data Analytics Platform tailored for the Finance Department. It extended previously established infrastructure of Project 2 by enhancing data structuring, security, lifecycle management, and initial data transformation capabilities using AWS services. The core aim was to enable the Finance team to securely store, manage, transform, and analyze large volumes of financial data generated from various operational systems, such as payment processing servers, billing systems, and online platforms.
+Objective:
+To design, configure, and secure an analytics-ready data lake environment that:
+•	Establish Infrastructure: Create a secure and cost-optimized infrastructure to simulate and support Finance Department operations.
+•	Data Ingestion and Storage: Enable ingestion and storage of diverse server-side datasets related to finance workflows.
+•	Data Organization: Perform metadata tagging and classify datasets using meaningful folder structures for efficient management.
+•	Security and Compliance: Apply security controls, including encryption, versioning, and replication, to ensure resilience and regulatory compliance.
+•	Data Preparation: Clean raw finance data and prepare it for analysis through structured data pipelines.
+•	ETL Workflows: Design and execute low-code ETL workflows using AWS Glue’s Visual ETL interface to generate curated, transformed datasets.
+•	Future-Ready Analytics: Provide a foundation for the future development of finance-specific analytics dashboards.
+Dataset Description:
+The datasets used in this project reflect core finance operations related to billing, payment processing, and transaction verification. They were uploaded and organized in the finance-raw-amr Amazon S3 bucket under four key top-level folders:
+1.	WebServerPaymentPageLogs – Contains logs of payment activities submitted through the finance department’s web portals. These are crucial for tracing customer payment issues or website performance anomalies.
+2.	GeneralServerBillingCompletionSummary – Holds records that summarize billing cycles, transaction completions, and payment confirmations, vital for monthly financial reconciliations.
+3.	BeanstalkPaymentFormSubmissions – Captures form submission data from the AWS Elastic Beanstalk-hosted payment modules used by the Finance department. This is especially useful for analyzing successful vs. failed payment attempts.
+4.	LambdaDropOffDetection – Records outputs from AWS Lambda functions that detect drop-offs in the payment process, helping the Finance team track customer journey issues and system interruptions.
+Each dataset was uploaded in .CSV format and contains sensitive financial information such as transaction timestamps, user IDs, payment statuses, transaction amounts, billing references, and system log messages.
+Methodology:
+1. Infrastructure and Virtual Environment Setup
+To simulate a secure and reliable environment for financial data analysis, the following configurations were executed:
+o	Logged into the AWS Academy Learner Lab and launched the environment in the US East (Northern Virginia) region.
+o	Created a Virtual Private Cloud (VPC) named Finance-Amr to define an isolated network for Finance operations.
+o	Set up a Security Group named Finance-SG-Amr with inbound rules to allow necessary traffic to EC2 and related resources.
+o	Launched an EC2 instance called FGVS-Amr with:
+•	OS: Windows (for GUI-based access).
+•	Instance type: t3.micro (suitable for low-cost operations).
+•	Storage: 30 GiB Elastic Block Store (EBS).
+•	Key pair: Used for secure SSH-based access.
+o	Created and attached a new EBS volume (Finance-Vol-Amr) and a Network Interface (Finance-NIC-Amr) to finalize the environment.
+2. Data Lake Structuring and Dataset Management
+Building on previously established storage infrastructure, the project proceeded with:
+•	Organizing the finance-raw-amr S3 bucket into logically named directories corresponding to data sources and operational relevance (e.g., WebServerPaymentPageLogs, GeneralServerBillingCompletionSummary, etc.).
+•	Uploading relevant datasets in .CSV format, adhering to naming conventions for consistency and discoverability.
+•	Implementing dataset tagging to apply metadata such as:
+o	Data Owner: Finance Department
+o	Source System: Web Server, Billing Server, Beanstalk, Lambda
+o	Classification: Confidential
+•	Defining and applying Lifecycle Policies to move infrequently accessed data to lower-cost storage tiers (e.g., S3 Infrequent Access or Glacier) based on quarterly access patterns.
+These structuring activities ensured that raw financial data was stored in an organized, searchable, and storage-optimized manner.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/18_Project2_Dataset%20Lineage%20Analysis.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/19_Project2_Fishbone%20Design%20for%20root%20cause%20analysis.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/20_Project2_Solution%20Architecture.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/21_Project2_DataLake%20Design.png
+3. Dataset Cleaning and Preparation
+The BeanstalkPaymentFormSubmissions dataset was selected for cleaning due to its mixed submission results and relevance for system diagnostics.
+•	Created a new S3 bucket finance-cln-amr to store cleaned versions of the dataset.
+•	Divided cleaned data into two folders:
+o	Passed: Containing successfully validated submissions.
+o	Failed: Containing records that were malformed, incomplete, or erroneous.
+•	Used AWS Glue DataBrew for data profiling and cleaning:
+o	Removed redundant characters and non-standard date formats.
+o	Standardized headers and field names.
+o	Tagged cleaned records using LabRole and defined output location preferences.
+•	Output configuration:
+o	Passed data was written as single-output files for simplicity.
+o	Failed data was auto-partitioned by failure category for faster future diagnostics.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/22_Project2_Data%20Cleaning%20Design.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/23_Project2_DAP%20ETL%20Design.png
+4.Data Security, Encryption, and Replication Configuration
+Given the sensitive nature of Finance Department data, the project emphasized data security and continuity through the following steps:
+•	Created and applied Customer-Managed Keys (CMKs) via AWS Key Management Service (KMS) to all critical S3 buckets:
+o	finance-raw-amr – for original ingestion data.
+o	finance-cln-amr – for cleaned/preprocessed datasets.
+o	finance-cur-amr – for curated and summarized datasets.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/24_Project2_Creation%20of%20Key.png
+•	Enabled bucket versioning to maintain change history, recover deleted files, and support regulatory requirements for audit trails.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/25_Project2_BucketVersioning%20and%20Key%20Usage%20for%20raw%20bucket.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/27_Project2_BucketVersioning%20and%20Key%20Usage%20for%20cln%20bucket.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/29_Project2_BucketVersioning%20and%20Key%20Usage%20for%20cur%20bucket.png
+•	Configured cross-region replication to replicate data from Northern Virginia to another AWS region, ensuring availability even in the event of regional outages. This feature is crucial for compliance with finance data retention and disaster recovery policies.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/26_Project2_Replication%20for%20raw%20bucket%20availability.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/28_Project2_Replication%20for%20cln%20bucket%20availability.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/30_Project2_Replication%20for%20cur%20bucket%20availability.png
+5. Data Governance and Privacy 
+Focused transformation efforts began with the BeanstalkPaymentFormSubmissions dataset:
+•	Created two subfolders within its directory to classify records into:
+o	Passed: Successful form submissions indicating payment success.
+o	Failed: Form submissions with errors or incomplete payment attempts.
+This classification laid the groundwork for subsequent filtering, error analysis, and visual reporting on payment processing success rates.
+Using AWS Glue Studio (Visual ETL), the following steps were taken:
+•	Initialized a Visual ETL Job.
+•	Defined data sources and mapped transformation rules.
+•	Set output configurations for storing the data in Quality check folder of curated bucket.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/33_Project2_Visual%20ETL%20for%20Quality%20Check.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/31_Project2_Output%20for%20passed%20folder%20after%20quality%20check%20of%20BeanstalkPaymentFormSubmission.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/32_Project2_Output%20for%20failed%20folder%20after%20quality%20check%20of%20BeanstalkPaymentFormSubmission.png
+5.Cloud scalability and monitoring
+A dashboard to display the usage variance of metrics of several services used during the project was created. An alarm configured to notify the user about possible threshold breach was also displayed on the dashboard. Also a trail was created using CloudTrail to track all events.
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/34_Project2_Dashboard%20for%20resouce%20metrics.png
+https://github.com/amrisha-20/data-analyst-amrisha/blob/main/35_Cloudtrail%20for%20event%20tracking.png
+Insights and Learnings
+•	Clear folder naming conventions and data tagging dramatically improved dataset traceability and management efficiency.
+•	Security configurations using encryption, versioning, and replication aligned with financial data compliance best practices.
+•	Glue’s low-code interface proved highly effective in building and testing data flows without requiring in-depth programming, accelerating the development process.
+•	Categorization of submission results (Passed/Failed) provided a practical method for segmenting data to detect transaction anomalies.
+•	A dashboard was implemented for real-time monitoring of service usage variance, with threshold-based alerts for proactive issue detection and AWS CloudTrail integration to ensure transparency, security, and auditability of all events.
+Recommendations
+•	Finalize Visual ETL Workflows
+Integrate all operational datasets into a unified finance reporting model using AWS Glue Studio.
+•	Use Amazon Athena for Analysis
+Enable SQL-based querying of curated datasets directly in S3 for flexible reporting.
+•	Integrate QuickSight Dashboards
+Build interactive dashboards to monitor KPIs like spending, billing delays, and error rates.
+•	Schedule Recurring Glue Jobs
+Automate data transformation tasks to keep reports and dashboards up to date.
+Tools and Technologies Used
+•	Amazon EC2, VPC, EBS – Compute and virtual infrastructure
+•	Amazon S3 – Centralized cloud storage with lifecycle rules
+•	AWS Glue Studio (Visual ETL) – Data transformation and pipeline creation
+•	AWS Key Management Service (KMS) – Encryption for data security
+•	Cross-region replication – For high availability
+•	CloudWatch – for monitoring and alerts
+•	CloudTrail – for event moniforing
+Deliverables
+•	Secure and structured S3-based data lake for finance operations.
+•	Configured EC2-based virtual environment with reusable setup scripts.
+•	Tagged, encrypted, and replicated datasets categorized by source system and use case.
+•	Visual ETL job initiated with clean input/output structures.
+•	Categorized Beanstalk submission data ready for quality assessment and analysis.
+•	Foundation set for future finance dashboards and reports.
+Conclusion
+This project enhanced the AWS-based Finance Data Analytics Platform by integrating cloud-native best practices in security, data governance, and analytics readiness. By organizing datasets, applying robust encryption policies, and initiating visual ETL processes for data governance, the platform is now positioned to deliver deep financial insights, improve operational transparency, and support data-driven decision-making in the Finance Department.
+
